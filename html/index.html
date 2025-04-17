@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App mit Sidebar v3 (Single File) - Mit Liste Löschen</title>
+
+    <style>
+        /* --- CSS Variablen für das Theme --- */
+        :root {
+            --primary-color: #0078D7;
+            --secondary-color: #107C10;
+            --danger-color: #D83B01; /* Rot für Löschen */
+            --warning-color: #FFB900;
+            --light-gray: #f0f0f0;
+            --medium-gray: #d0d0d0;
+            --dark-gray: #605e5c;
+            --text-color: #323130;
+            --bg-gradient: linear-gradient(145deg, #eaf6ff 0%, #f5f5fa 100%);
+            --card-bg-color: rgba(255, 255, 255, 0.9);
+            --sidebar-bg: rgba(245, 248, 250, 0.9);
+            --border-radius: 6px;
+            --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            --transition-speed: 0.2s ease-in-out;
+            --font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+            --sidebar-width: 240px;
+        }
+
+        /* --- Grundlegendes Styling --- */
+        body {
+            font-family: var(--font-family);
+            line-height: 1.6;
+            background: var(--bg-gradient);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* --- Haupt-Layout Container (Flexbox) --- */
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- Sidebar Styling --- */
+        #sidebar {
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+            background-color: var(--sidebar-bg);
+            padding: 20px;
+            border-right: 1px solid var(--light-gray);
+            box-shadow: 3px 0 10px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        #listNav {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+            flex-grow: 1;
+            overflow-y: auto; /* Scrollbar falls nötig */
+            min-height: 100px; /* Mindesthöhe für bessere Optik */
+        }
+
+        #listNav button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            border: none;
+            background-color: transparent;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-color);
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+        #listNav button:hover {
+            background-color: rgba(0, 120, 215, 0.08);
+            color: var(--primary-color);
+        }
+        #listNav button.active {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+        #listNav button:focus {
+             outline: none;
+             box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.2) inset;
+        }
+
+        /* Bereich zum Hinzufügen/Löschen von Listen (in Sidebar) */
+        .add-list-group {
+            margin-top: auto; /* Bleibt unten */
+            padding-top: 15px;
+            border-top: 1px solid var(--light-gray);
+        }
+        .add-list-group input[type="text"] {
+            width: calc(100% - 24px); /* Berücksichtigt Padding */
+            padding: 8px 12px;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            display: block; /* Nimmt volle Breite ein */
+        }
+         .add-list-group input[type="text"]:focus {
+             outline: none;
+             border-color: var(--primary-color);
+             box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.2);
+        }
+        .add-list-group button {
+            width: 100%;
+            padding: 8px 15px;
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: background-color var(--transition-speed), transform var(--transition-speed);
+            /* Hintergrundfarbe wird spezifisch gesetzt */
+        }
+        .add-list-group button:active { transform: scale(0.98); }
+
+        /* Spezifische Button-Stile */
+        #addListButton {
+            background-color: var(--secondary-color); /* Grün */
+            margin-bottom: 8px; /* Abstand zum nächsten Button */
+        }
+        #addListButton:hover { background-color: #0d630d; }
+
+        /* === NEUER CSS-STIL für den Löschen-Button === */
+        #deleteListButton {
+            background-color: var(--danger-color); /* Rot */
+            /* margin-top: 8px; */ /* Wird durch margin-bottom von Add-Button geregelt */
+        }
+        #deleteListButton:hover {
+            background-color: #a42600; /* Dunkleres Rot */
+        }
+        #deleteListButton:disabled { /* Stil für deaktivierten Button */
+            background-color: var(--medium-gray);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        /* === Ende Neuer CSS-Stil === */
+
+
+        /* --- Haupt-Content Bereich --- */
+        #main-content-wrapper {
+            flex-grow: 1;
+            padding: 30px 40px;
+            overflow-y: auto;
+            max-height: 100vh; /* Wichtig für Scrollbarkeit */
+        }
+
+        /* --- Eingabebereich für Aufgaben --- */
+        .controls-area {
+            margin-bottom: 40px;
+        }
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end; /* Am unteren Rand ausrichten */
+        }
+        .control-group div { /* Container für Label + Input */
+           /* Flex-Wachstum wird bei Inputs direkt gesetzt */
+        }
+        .control-group label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--dark-gray);
+            margin-bottom: 5px; /* Angepasster Abstand */
+            display: block;
+            width: 100%;
+        }
+
+        .control-group input[type="text"],
+        .control-group input[type="date"] {
+            padding: 12px 15px;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+            color: var(--text-color);
+            background-color: #fff;
+            height: auto;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04) inset;
+            width: 100%; /* Wichtig für Flex-Basis */
+            box-sizing: border-box; /* Padding/Border in Breite einrechnen */
+        }
+         .control-group input[type="text"]:focus,
+         .control-group input[type="date"]:focus {
+             outline: none;
+             border-color: var(--primary-color);
+             box-shadow: 0 0 0 3px rgba(0, 120, 215, 0.2);
+        }
+        #taskInput { flex: 3 1 250px; min-width: 200px; } /* Flex-Basis für Input */
+        #dueDateInput { color: var(--dark-gray); } /* Input für Datum */
+        .date-input-container { flex: 1 1 160px; min-width: 160px; } /* Container für Datums-Label+Input */
+
+        #listSelect { display: none; }
+        .control-group label[for="listSelect"] { display: none; }
+
+        #addTaskButton {
+            flex: 0 0 auto;
+            padding: 12px 22px;
+            height: 48px; /* Höhe an Inputs anpassen (padding + font-size + border) */
+            box-sizing: border-box; /* Höhe korrekt berechnen */
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color var(--transition-speed), transform var(--transition-speed);
+            /* align-self: flex-end; */ /* Schon durch align-items im parent */
+            /* margin-bottom: 1px; */ /* Nicht mehr nötig durch align-items: flex-end */
+        }
+        #addTaskButton:hover { background-color: #005a9e; }
+        #addTaskButton:active { transform: scale(0.97); }
+        #addTaskButton:focus { outline: none; box-shadow: 0 0 0 3px rgba(0, 120, 215, 0.3); }
+
+
+        /* --- Aufgabenlisten-Bereiche (im Hauptbereich) --- */
+        #main-content {}
+        .list-content-area {}
+        .list-content { display: none; }
+        .list-content.active { display: block; }
+        .tasks-section { margin-top: 25px; }
+        .tasks-section h3 {
+            margin: 0 0 15px 0;
+            color: var(--dark-gray);
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        .task-list { list-style: none; padding: 0; margin: 0; min-height: 50px; }
+        .empty-list-message {
+             color: var(--dark-gray);
+             text-align: center;
+             padding: 30px 20px;
+             font-style: italic;
+             background-color: rgba(255, 255, 255, 0.6);
+             border-radius: var(--border-radius);
+             display: none; /* Standardmässig ausblenden */
+             margin-top: 15px;
+        }
+        /* Zeige Nachricht, wenn die *jeweilige* Liste leer ist */
+        #taskListPending:empty + .empty-list-message,
+        #taskListCompleted:empty + .empty-list-message {
+            display: block;
+        }
+        /* Nachricht speziell für leere App (keine Listen) */
+        #listContentArea:has(> .no-lists-message) {
+             /* Optional: zusätzliches Styling */
+        }
+        .no-lists-message { /* Klasse für die "Keine Listen"-Nachricht */
+             color: var(--dark-gray);
+             text-align: center;
+             padding: 40px 20px;
+             font-size: 1.1rem;
+             font-style: italic;
+             background-color: rgba(255, 255, 255, 0.7);
+             border-radius: var(--border-radius);
+             margin-top: 20px;
+        }
+
+
+        /* --- Task Item Styling --- */
+        .task-item {
+            background-color: var(--card-bg-color);
+            padding: 12px 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--light-gray);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: box-shadow var(--transition-speed), background-color var(--transition-speed), opacity var(--transition-speed);
+            cursor: grab;
+        }
+        .task-item:hover { box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08); background-color: #fff;}
+        .task-content { flex-grow: 1; margin-right: 15px; display: flex; flex-direction: column; } /* Flex Column für Text+Datum */
+        .task-text { display: block; font-size: 1rem; font-weight: 500; word-break: break-word; color: var(--text-color); }
+        .due-date { font-size: 0.8rem; color: var(--dark-gray); margin-top: 4px; display: inline-block; background-color: var(--light-gray); padding: 1px 6px; border-radius: 3px; align-self: flex-start; } /* Datum linksbündig */
+
+        /* Buttons innerhalb der Aufgabe */
+        .task-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .task-actions button {
+            border: 1px solid transparent;
+            border-radius: 50%;
+            width: 30px; height: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background-color var(--transition-speed), transform var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
+            color: var(--dark-gray);
+            background-color: var(--light-gray);
+        }
+        .task-actions button:hover { background-color: var(--medium-gray); color: #fff; }
+        .task-actions button:active { transform: scale(0.92); }
+        .task-actions button:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.2); }
+        .complete-button { color: var(--secondary-color); background-color: #e7f3e7; }
+        .complete-button:hover { background-color: var(--secondary-color); color: #fff; }
+        .reactivate-button { color: var(--primary-color); background-color: #e1f0fa; }
+        .reactivate-button:hover { background-color: var(--primary-color); color: #fff; }
+        .delete-button { color: var(--danger-color); background-color: #fdecea; }
+        .delete-button:hover { background-color: var(--danger-color); color: #fff;}
+
+        /* Styling für erledigte Aufgaben */
+        .task-item.completed {
+             background-color: rgba(248, 249, 250, 0.8);
+             box-shadow: none;
+             border: 1px dashed var(--medium-gray);
+             opacity: 0.8;
+        }
+        .task-item.completed .task-text { text-decoration: line-through; color: var(--dark-gray); font-weight: normal; opacity: 0.7; }
+        .task-item.completed .due-date { color: var(--dark-gray); text-decoration: none; opacity: 0.7; background-color: var(--light-gray); }
+        #taskListCompleted .delete-button { opacity: 0.7; }
+
+        /* Styling für überfällige Aufgaben */
+        .task-item.overdue { border-left: 4px solid var(--warning-color); padding-left: 11px; }
+        .task-item.overdue .due-date { color: #fff; background-color: var(--warning-color); font-weight: bold; }
+
+        /* Drag & Drop Styling */
+        .task-item.dragging { opacity: 0.5; cursor: grabbing; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); transform: scale(1.02); }
+        .task-list.drag-over { background-color: rgba(0, 120, 215, 0.05); outline: 2px dashed var(--primary-color); outline-offset: -2px; }
+
+        /* Einfache Responsivität */
+        @media (max-width: 768px) {
+            .app-layout { flex-direction: column; }
+            #sidebar { width: 100%; max-height: 300px; overflow-y: auto; border-right: none; border-bottom: 1px solid var(--light-gray); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03); }
+            .add-list-group { margin-top: 15px; }
+            #main-content-wrapper { padding: 20px; max-height: none; }
+            .control-group { align-items: stretch; flex-direction: column; } /* Untereinander auf Mobile */
+            .control-group div, .date-input-container { width: 100%; flex-basis: auto !important; min-width: auto !important; } /* Volle Breite für Inputs */
+            #addTaskButton { width: 100%; margin-top: 10px; height: 44px; } /* Volle Breite & angepasste Höhe */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-layout">
+
+        <aside id="sidebar">
+            <h2>Meine Listen</h2>
+            <nav id="listNav">
+                </nav>
+            <div class="add-list-group">
+                 <input type="text" id="newListInput" placeholder="Neue Liste..." aria-label="Name der neuen Liste">
+                 <button id="addListButton" title="Neue Liste hinzufügen">Liste erstellen</button>
+                 <button id="deleteListButton" title="Aktive Liste löschen">Liste Löschen</button>
+                 </div>
+        </aside>
+
+        <div id="main-content-wrapper">
+
+            <div class="controls-area">
+                <div class="control-group">
+                    <div> <label for="taskInput">Neue Aufgabe für die aktive Liste:</label>
+                        <input type="text" id="taskInput" placeholder="Aufgabentext...">
+                    </div>
+                    <div class="date-input-container"> <label for="dueDateInput">Fällig am (optional):</label>
+                        <input type="date" id="dueDateInput">
+                    </div>
+                    <select id="listSelect" style="display: none;" aria-label="Liste auswählen"></select> <button id="addTaskButton" title="Aufgabe zur aktiven Liste hinzufügen">Aufgabe +</button>
+                </div>
+            </div>
+
+            <main id="main-content">
+                <div class="list-content-area" id="listContentArea">
+                    </div>
+            </main>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            let appData = { lists: [], tasks: {} };
+            let activeListId = null;
+            let draggedTaskId = null;
+            let draggedTaskListId = null; // ID der Liste, aus der gezogen wird
+
+            // Element-Referenzen
+            const sidebar = document.getElementById('sidebar');
+            const listNav = document.getElementById('listNav');
+            const mainContentWrapper = document.getElementById('main-content-wrapper');
+            const mainContent = document.getElementById('main-content');
+            const newListInput = document.getElementById('newListInput');
+            const addListButton = document.getElementById('addListButton');
+            const deleteListButton = document.getElementById('deleteListButton'); // *** NEU ***
+            const taskInput = document.getElementById('taskInput');
+            const dueDateInput = document.getElementById('dueDateInput');
+            const addTaskButton = document.getElementById('addTaskButton');
+            const listSelect = document.getElementById('listSelect'); // Wird nicht angezeigt, aber intern genutzt
+            const listContentArea = document.getElementById('listContentArea');
+
+            // --- Daten Laden & Speichern ---
+            function loadAppData() {
+                const storedData = localStorage.getItem('todoAppData');
+                try {
+                    const parsedData = JSON.parse(storedData);
+                    if (parsedData && Array.isArray(parsedData.lists) && typeof parsedData.tasks === 'object') {
+                        appData = parsedData;
+                        // Sicherstellen, dass jede Liste einen Eintrag in tasks hat
+                        appData.lists.forEach(list => {
+                            if (!appData.tasks[list.id]) appData.tasks[list.id] = [];
+                        });
+                        // Ungültige Listen-IDs aus tasks entfernen (falls Listen gelöscht wurden, aber tasks nicht)
+                        const validListIds = new Set(appData.lists.map(l => l.id));
+                        Object.keys(appData.tasks).forEach(listId => {
+                            if (!validListIds.has(listId)) {
+                                delete appData.tasks[listId];
+                            }
+                        });
+
+                    } else {
+                        // Fallback: Initialdaten erstellen
+                        appData = { lists: [{ id: 'list-' + Date.now(), name: 'Mein Tag' }], tasks: {} };
+                        appData.tasks[appData.lists[0].id] = [];
+                    }
+                } catch (e) {
+                    console.error("Fehler beim Laden der Daten:", e);
+                    // Fallback bei Fehler
+                    appData = { lists: [{ id: 'list-' + Date.now(), name: 'Mein Tag' }], tasks: {} };
+                    appData.tasks[appData.lists[0].id] = [];
+                }
+
+                 // Aktive Liste bestimmen oder auf erste Liste setzen
+                 const storedActiveListId = localStorage.getItem('activeListId');
+                 if (storedActiveListId && appData.lists.some(list => list.id === storedActiveListId)) {
+                     activeListId = storedActiveListId;
+                 } else if (appData.lists.length > 0) {
+                     activeListId = appData.lists[0].id;
+                 } else {
+                     activeListId = null;
+                 }
+            }
+
+            function saveAppData() {
+                try {
+                    localStorage.setItem('todoAppData', JSON.stringify(appData));
+                    if (activeListId) {
+                        localStorage.setItem('activeListId', activeListId);
+                    } else {
+                        localStorage.removeItem('activeListId');
+                    }
+                } catch (e) {
+                    console.error("Fehler beim Speichern der Daten:", e);
+                    alert("Fehler beim Speichern der Daten! Änderungen gehen möglicherweise verloren.");
+                }
+            }
+
+            // --- Hilfsfunktionen ---
+            function getTodayDateString() {
+                const today = new Date();
+                // Ignoriert Zeitzone für reinen Datumsvergleich
+                today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+                return today.toISOString().split('T')[0];
+            }
+
+            // --- UI Rendering Funktionen ---
+            function renderSidebarNavAndSelector() {
+                listNav.innerHTML = ''; // Leeren
+                listSelect.innerHTML = ''; // Leeren
+
+                if (appData.lists.length === 0) {
+                    const placeholder = document.createElement('p');
+                    placeholder.textContent = 'Keine Listen vorhanden.';
+                    placeholder.style.padding = '10px 15px';
+                    placeholder.style.color = 'var(--dark-gray)';
+                    placeholder.style.fontStyle = 'italic';
+                    listNav.appendChild(placeholder);
+                    deleteListButton.disabled = true; // *** NEU: Löschen-Button deaktivieren ***
+                    return; // Frühzeitig beenden, wenn keine Listen da sind
+                }
+
+                deleteListButton.disabled = !activeListId; // *** NEU: Deaktivieren, falls keine Liste aktiv ist ***
+
+                appData.lists.forEach(list => {
+                    // Button für Sidebar-Navigation
+                    const navButton = document.createElement('button');
+                    navButton.textContent = list.name;
+                    navButton.setAttribute('data-list-id', list.id);
+                    if (list.id === activeListId) {
+                        navButton.classList.add('active');
+                    }
+                    navButton.addEventListener('click', () => switchList(list.id));
+                    listNav.appendChild(navButton);
+
+                    // Option für (verstecktes) Select-Element
+                    const option = document.createElement('option');
+                    option.value = list.id;
+                    option.textContent = list.name;
+                    listSelect.appendChild(option);
+                });
+
+                // Aktiven Wert im Select setzen (auch wenn versteckt)
+                if (activeListId) {
+                    listSelect.value = activeListId;
+                }
+            }
+
+            function renderListContent(listId) {
+                listContentArea.innerHTML = ''; // Vorherigen Inhalt leeren
+
+                if (!listId || !appData.lists.some(l => l.id === listId)) {
+                     // Zustand, wenn keine Liste ausgewählt ist ODER die aktive Liste nicht mehr existiert
+                     if (appData.lists.length === 0) {
+                         listContentArea.innerHTML = '<p class="no-lists-message">Keine Listen vorhanden. Erstelle eine neue Liste in der Sidebar!</p>';
+                     } else {
+                         // Sollte eigentlich nicht passieren, da wir zu einer gültigen wechseln, aber als Fallback:
+                         listContentArea.innerHTML = '<p class="no-lists-message">Bitte wähle eine Liste aus der Sidebar aus.</p>';
+                     }
+                     addTaskButton.disabled = true; // Aufgabe hinzufügen deaktivieren
+                     taskInput.disabled = true;
+                     dueDateInput.disabled = true;
+                    return;
+                }
+
+                 // Eingabefelder aktivieren, falls sie deaktiviert waren
+                 addTaskButton.disabled = false;
+                 taskInput.disabled = false;
+                 dueDateInput.disabled = false;
+
+
+                const listContentDiv = document.createElement('div');
+                listContentDiv.classList.add('list-content', 'active'); // Ist immer aktiv, da nur die aktuelle gerendert wird
+                listContentDiv.setAttribute('data-list-id', listId); // Wichtig für Drag&Drop Kontext
+
+                listContentDiv.innerHTML = `
+                    <div class="tasks-section" id="pendingTasksSection-${listId}">
+                        <h3>Offen</h3>
+                        <ul id="taskListPending-${listId}" class="task-list" data-list-status="pending"></ul>
+                        <p class="empty-list-message">Keine offenen Aufgaben! 👍</p>
+                    </div>
+                    <div class="tasks-section" id="completedTasksSection-${listId}">
+                        <h3>Erledigt</h3>
+                        <ul id="taskListCompleted-${listId}" class="task-list" data-list-status="completed"></ul>
+                        <p class="empty-list-message">Noch keine Aufgaben erledigt.</p>
+                    </div>`;
+                listContentArea.appendChild(listContentDiv);
+
+                const taskListPending = listContentDiv.querySelector(`#taskListPending-${listId}`);
+                const taskListCompleted = listContentDiv.querySelector(`#taskListCompleted-${listId}`);
+
+                // Event Listener für Drag & Drop hinzufügen
+                [taskListPending, taskListCompleted].forEach(listElement => {
+                    listElement.setAttribute('data-list-id', listId); // Nötig? Ja, zur Sicherheit
+                    listElement.addEventListener('dragenter', handleDragEnter);
+                    listElement.addEventListener('dragover', handleDragOver);
+                    listElement.addEventListener('dragleave', handleDragLeave);
+                    listElement.addEventListener('drop', handleDrop);
+                });
+
+                const tasksInList = appData.tasks[listId] || [];
+                tasksInList.forEach(task => renderTask(task, listId, taskListPending, taskListCompleted));
+
+                 // Prüfen, ob Listen leer sind, um Nachrichten anzuzeigen (CSS :empty reicht oft)
+                 // Manuelles Hinzufügen/Entfernen von Klassen ist eine Alternative bei komplexeren Szenarien
+            }
+
+            function renderTask(task, listId, targetListPending, targetListCompleted) {
+                const listItem = document.createElement('li');
+                listItem.classList.add('task-item');
+                listItem.setAttribute('data-id', task.id);
+                listItem.setAttribute('data-list-id', listId); // Hilfreich, aber Kontext ist meist über .closest('.list-content')
+                listItem.setAttribute('draggable', 'true');
+                listItem.addEventListener('dragstart', handleDragStart);
+                listItem.addEventListener('dragend', handleDragEnd);
+
+                // Task Inhalt (Text + Datum)
+                const taskContent = document.createElement('div');
+                taskContent.classList.add('task-content');
+                const taskTextSpan = document.createElement('span');
+                taskTextSpan.classList.add('task-text');
+                taskTextSpan.textContent = task.text;
+                taskContent.appendChild(taskTextSpan);
+                if (task.dueDate) {
+                    const dueDateSpan = document.createElement('span');
+                    dueDateSpan.classList.add('due-date');
+                    try {
+                        // Versuch, Datum zu formatieren
+                        const dateObj = new Date(task.dueDate + 'T00:00:00'); // Zeit hinzufügen, um Zeitzonenprobleme zu minimieren
+                        if (!isNaN(dateObj)) {
+                           dueDateSpan.textContent = `Fällig: ${dateObj.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: 'short' })}`;
+                        } else {
+                            throw new Error("Invalid Date");
+                        }
+                    } catch(e) {
+                        console.warn("Konnte Datum nicht parsen:", task.dueDate);
+                        dueDateSpan.textContent = `Fällig: ${task.dueDate}`; // Fallback
+                    }
+                    taskContent.appendChild(dueDateSpan);
+                    // Überfällig-Klasse hinzufügen
+                    if (!task.completed && task.dueDate < getTodayDateString()) {
+                        listItem.classList.add('overdue');
+                    }
+                }
+                listItem.appendChild(taskContent);
+
+                // Task Aktionen (Buttons)
+                const taskActions = document.createElement('div');
+                taskActions.classList.add('task-actions');
+                const completeButton = document.createElement('button');
+                completeButton.setAttribute('aria-label', task.completed ? 'Aufgabe reaktivieren' : 'Aufgabe als erledigt markieren');
+                completeButton.title = task.completed ? 'Reaktivieren' : 'Erledigen';
+                if (task.completed) {
+                    completeButton.innerHTML = '&#8617;'; // Pfeil zurück
+                    completeButton.classList.add('reactivate-button');
+                } else {
+                    completeButton.innerHTML = '&#10003;'; // Haken
+                    completeButton.classList.add('complete-button');
+                }
+                completeButton.addEventListener('click', () => toggleTaskCompleted(task.id, listId));
+                taskActions.appendChild(completeButton);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.innerHTML = '&#128465;'; // Papierkorb-Symbol
+                deleteButton.classList.add('delete-button');
+                deleteButton.setAttribute('aria-label', 'Aufgabe löschen');
+                deleteButton.title = "Löschen";
+                deleteButton.addEventListener('click', () => deleteTask(task.id, listId));
+                taskActions.appendChild(deleteButton);
+                listItem.appendChild(taskActions);
+
+                // Zur richtigen Liste hinzufügen (offen oder erledigt)
+                if (task.completed) {
+                    listItem.classList.add('completed');
+                    targetListCompleted.appendChild(listItem);
+                } else {
+                    targetListPending.appendChild(listItem);
+                }
+            }
+
+            // Komplette UI neu rendern
+            function renderUI() {
+                console.log("Rendering UI, Active List:", activeListId);
+                renderSidebarNavAndSelector();
+                renderListContent(activeListId); // Rendert entweder die aktive Liste oder die "Keine Liste"-Nachricht
+            }
+
+            // --- Aktionen (Listen & Aufgaben) ---
+            function switchList(listId) {
+                if (listId === activeListId && document.querySelector(`.list-content[data-list-id="${listId}"]`)) {
+                     console.log("List already active and rendered:", listId);
+                     return; // Nicht wechseln, wenn schon aktiv und gerendert
+                }
+                console.log("Switching list to:", listId);
+                activeListId = listId;
+                saveAppData(); // Aktive Liste speichern
+                renderUI(); // UI neu aufbauen (Sidebar-Highlight + Content)
+            }
+
+            function addList() {
+                const listName = newListInput.value.trim();
+                if (listName) {
+                    const newList = { id: 'list-' + Date.now(), name: listName };
+                    appData.lists.push(newList);
+                    appData.tasks[newList.id] = []; // Leere Aufgabenliste initialisieren
+                    newListInput.value = '';
+                    activeListId = newList.id; // Direkt zur neuen Liste wechseln
+                    saveAppData();
+                    renderUI(); // Alles neu rendern
+                    newListInput.focus(); // Fokus zurück ins Input-Feld (optional)
+                } else {
+                    alert("Bitte einen Namen für die neue Liste eingeben.");
+                    newListInput.focus();
+                }
+            }
+
+            // *** NEUE FUNKTION: Aktive Liste löschen ***
+            function deleteActiveList() {
+                if (!activeListId || appData.lists.length === 0) {
+                    alert("Keine Liste zum Löschen ausgewählt.");
+                    return;
+                }
+
+                const listToDelete = appData.lists.find(list => list.id === activeListId);
+                if (!listToDelete) {
+                    console.error("Zu löschende Liste nicht gefunden:", activeListId);
+                    activeListId = null; // ID zurücksetzen
+                    saveAppData();
+                    renderUI();
+                    return;
+                }
+
+                // Sicherheitsabfrage
+                if (!confirm(`Möchten Sie die Liste "${listToDelete.name}" und alle darin enthaltenen Aufgaben wirklich unwiderruflich löschen?`)) {
+                    return; // Abbrechen, wenn der Benutzer nicht bestätigt
+                }
+
+                console.log("Deleting list:", activeListId);
+
+                // 1. Liste aus dem Array entfernen
+                appData.lists = appData.lists.filter(list => list.id !== activeListId);
+
+                // 2. Zugehörige Aufgaben löschen
+                delete appData.tasks[activeListId];
+
+                // 3. Neue aktive Liste bestimmen (die erste verbleibende oder null)
+                if (appData.lists.length > 0) {
+                    activeListId = appData.lists[0].id;
+                } else {
+                    activeListId = null;
+                }
+
+                // 4. Daten speichern und UI neu rendern
+                saveAppData();
+                renderUI();
+            }
+            // *** Ende Neue Funktion ***
+
+            function addTask() {
+                const taskText = taskInput.value.trim();
+                const dueDateValue = dueDateInput.value; // YYYY-MM-DD Format oder leer
+
+                if (!activeListId) {
+                    alert("Kann keine Aufgabe hinzufügen. Bitte wählen Sie zuerst eine Liste aus oder erstellen Sie eine neue.");
+                    return;
+                }
+                if (!taskText) {
+                    alert("Bitte geben Sie einen Text für die Aufgabe ein.");
+                    taskInput.focus();
+                    return;
+                }
+
+                const newTask = {
+                    id: 'task-' + Date.now(),
+                    text: taskText,
+                    completed: false,
+                    dueDate: dueDateValue || null // Speichert null, wenn kein Datum gesetzt ist
+                };
+
+                // Sicherstellen, dass das Aufgaben-Array für die Liste existiert
+                if (!appData.tasks[activeListId]) {
+                    appData.tasks[activeListId] = [];
+                }
+
+                appData.tasks[activeListId].unshift(newTask); // Neue Aufgabe am Anfang einfügen
+                saveAppData();
+
+                // Nur den Listeninhalt neu rendern, nicht die ganze UI
+                renderListContent(activeListId);
+
+                // Eingabefelder leeren und Fokus setzen
+                taskInput.value = '';
+                dueDateInput.value = '';
+                taskInput.focus();
+            }
+
+            function toggleTaskCompleted(taskId, listId) {
+                if (!appData.tasks[listId]) return;
+                const taskIndex = appData.tasks[listId].findIndex(task => task.id === taskId);
+                if (taskIndex === -1) return;
+
+                appData.tasks[listId][taskIndex].completed = !appData.tasks[listId][taskIndex].completed;
+                saveAppData();
+
+                // Nur den Inhalt der aktiven Liste neu rendern, wenn sie betroffen ist
+                if (listId === activeListId) {
+                    renderListContent(activeListId);
+                }
+            }
+
+            function deleteTask(taskId, listId) {
+                 // Zusätzliche Sicherheitsabfrage (optional, aber gut bei destruktiven Aktionen)
+                 // if (!confirm("Möchten Sie diese Aufgabe wirklich löschen?")) {
+                 //     return;
+                 // }
+
+                if (!appData.tasks[listId]) return;
+                appData.tasks[listId] = appData.tasks[listId].filter(task => task.id !== taskId);
+                saveAppData();
+
+                if (listId === activeListId) {
+                    renderListContent(activeListId);
+                }
+            }
+
+            // --- Drag & Drop Handler ---
+             function handleDragStart(event) {
+                draggedTaskId = event.target.getAttribute('data-id');
+                // Liste ID vom Elternelement holen, das sie sicher hat
+                const listContentElement = event.target.closest('.list-content');
+                if (!listContentElement) {
+                    console.error("Konnte list-content für Drag Start nicht finden.");
+                    event.preventDefault(); // Drag verhindern
+                    return;
+                }
+                draggedTaskListId = listContentElement.getAttribute('data-list-id');
+
+                if (!draggedTaskListId) {
+                     console.error("Konnte Quell-Listen-ID beim Drag Start nicht finden.");
+                     event.preventDefault();
+                     return;
+                }
+
+                event.dataTransfer.setData('text/plain', draggedTaskId);
+                event.dataTransfer.effectAllowed = 'move';
+                // Leichte Verzögerung, damit das Element als "dragging" markiert wird, nachdem der Browser den Drag "Snapshot" gemacht hat
+                setTimeout(() => {
+                     if(event.target.classList) event.target.classList.add('dragging');
+                }, 0);
+                console.log("Drag Start:", draggedTaskId, "from list:", draggedTaskListId);
+             }
+
+             function handleDragEnd(event) {
+                 // Wichtig: Klassen und Variablen aufräumen
+                 if (event.target.classList) event.target.classList.remove('dragging');
+                 draggedTaskId = null;
+                 draggedTaskListId = null;
+                 // Alle potenziellen Drop-Zonen vom "drag-over"-Stil befreien
+                 document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                 console.log("Drag End");
+             }
+
+             function handleDragEnter(event) {
+                event.preventDefault(); // Notwendig, um 'drop' zu erlauben
+                const targetListElement = event.target.closest('.task-list');
+                if (targetListElement && targetListElement.getAttribute('data-list-id')) {
+                     // Verhindern, dass die Hervorhebung flackert, wenn man über Kindelemente zieht
+                     document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                     targetListElement.classList.add('drag-over');
+                }
+             }
+
+             function handleDragOver(event) {
+                 event.preventDefault(); // Muss für 'drop' gesetzt sein
+                 event.dataTransfer.dropEffect = 'move';
+             }
+
+             function handleDragLeave(event) {
+                 // Entferne 'drag-over', wenn der Mauszeiger das Listenelement *oder* eines seiner Kinder verlässt
+                 const targetListElement = event.target.closest('.task-list');
+                 // Prüfen, ob das Element, zu dem wir uns bewegen (relatedTarget), *innerhalb* des aktuellen Zielbereichs liegt.
+                 // Wenn nicht, oder wenn relatedTarget null ist (Fenster verlassen), dann entfernen wir die Klasse.
+                 if (targetListElement && !targetListElement.contains(event.relatedTarget)) {
+                     targetListElement.classList.remove('drag-over');
+                 }
+             }
+
+             function handleDrop(event) {
+                event.preventDefault(); // Standard-Drop-Verhalten verhindern
+                const targetListElement = event.target.closest('.task-list');
+
+                // Aufräumen und Abbruchbedingungen prüfen
+                if (targetListElement) targetListElement.classList.remove('drag-over');
+                if (!targetListElement || !draggedTaskId || !draggedTaskListId) {
+                    console.warn("Drop abgebrochen - ungültiges Ziel oder Quelle.");
+                    return;
+                }
+
+                // Ziel-Liste und Status ermitteln
+                const targetListId = targetListElement.closest('.list-content').getAttribute('data-list-id');
+                const targetIsCompletedList = targetListElement.getAttribute('data-list-status') === 'completed'; // Prüfen, ob es die 'Erledigt'-Liste ist
+
+                console.log("Drop:", draggedTaskId, "from", draggedTaskListId, "to list:", targetListId, "in section:", targetIsCompletedList ? 'completed' : 'pending');
+
+                if (!appData.tasks[draggedTaskListId]) {
+                    console.error("Quell-Aufgabenliste nicht gefunden:", draggedTaskListId);
+                    return;
+                }
+                const taskIndex = appData.tasks[draggedTaskListId].findIndex(task => task.id === draggedTaskId);
+                if (taskIndex === -1) {
+                    console.error("Gezogene Aufgabe nicht in Quellliste gefunden:", draggedTaskId);
+                    return;
+                }
+
+                const taskToMove = appData.tasks[draggedTaskListId][taskIndex];
+
+                // Prüfen, ob sich Liste oder Status geändert hat
+                const statusChanged = taskToMove.completed !== targetIsCompletedList;
+                const listChanged = targetListId !== draggedTaskListId;
+
+                // Nur handeln, wenn eine Änderung stattfindet
+                if (listChanged || statusChanged) {
+                    // Status der Aufgabe anpassen
+                    taskToMove.completed = targetIsCompletedList;
+
+                    // Aufgabe aus alter Liste entfernen
+                    appData.tasks[draggedTaskListId].splice(taskIndex, 1);
+
+                    // Aufgabe zur neuen Liste hinzufügen (am Anfang)
+                    if (!appData.tasks[targetListId]) appData.tasks[targetListId] = [];
+                    appData.tasks[targetListId].unshift(taskToMove);
+
+                    saveAppData();
+                    renderUI(); // Komplette UI neu rendern, um Konsistenz sicherzustellen
+                } else {
+                     console.log("Keine Änderung bei Drop (gleiche Liste, gleicher Status).");
+                     // Hier könnte man Logik für das *Umordnen innerhalb derselben Liste* einfügen,
+                     // z.B. basierend auf der Mausposition relativ zu anderen Elementen.
+                     // Das ist aber komplexer und hier nicht implementiert.
+                }
+             }
+
+
+            // --- Initialisierung ---
+            function initializeApp() {
+                console.log("Initializing To-Do App...");
+                loadAppData();
+                renderUI(); // Initiale UI rendern
+
+                // Event Listeners hinzufügen
+                addListButton.addEventListener('click', addList);
+                deleteListButton.addEventListener('click', deleteActiveList); // *** NEU ***
+                addTaskButton.addEventListener('click', addTask);
+
+                // Enter-Taste für Eingabefelder
+                newListInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addList(); });
+                taskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });
+                dueDateInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });
+
+                console.log("App Initialized.");
+            }
+
+            // App starten
+            initializeApp();
+
+        }); // Ende DOMContentLoaded
+    </script>
+
+</body>
+</html>

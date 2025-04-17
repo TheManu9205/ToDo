@@ -1,0 +1,9 @@
+services:
+  nginx:
+    image: to-do 
+    container_name: to-do
+    ports:
+      - "8082:80"
+      - "44345:443"
+    restart: unless-stopped
+    tty: true

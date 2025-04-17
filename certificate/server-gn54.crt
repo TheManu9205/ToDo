@@ -1,0 +1,87 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            72:35:16:2b:d1:e5:a1:d8:74:cb:08:51:b3:0c:a1:5f
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: CN=NGINX_Test
+        Validity
+            Not Before: Jan 30 10:23:25 2025 GMT
+            Not After : May  5 10:23:25 2027 GMT
+        Subject: CN=server-gn54
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:b1:03:4a:0c:3a:64:88:74:84:e6:88:00:67:ff:
+                    03:9c:fd:76:bf:1a:ba:5a:82:c8:0b:00:63:10:25:
+                    69:69:5a:55:d9:12:47:2d:8a:6f:3c:ca:f4:4e:75:
+                    48:a2:1d:66:90:a1:d4:75:29:62:37:71:f8:f1:9f:
+                    da:6c:3a:6d:9e:69:d1:33:4f:85:8a:6e:ae:17:02:
+                    07:2d:bf:41:3e:60:b3:73:d9:5c:a4:57:89:d8:c7:
+                    6c:8e:07:5c:31:e5:85:78:2d:cb:55:14:19:94:ae:
+                    31:f9:90:a6:a6:f5:5f:1b:c6:93:9a:59:b8:8e:af:
+                    ce:53:58:e1:dd:ad:48:de:29:60:f8:30:11:24:79:
+                    b2:dd:f5:f5:33:3f:d5:91:03:7e:b6:cc:7d:2f:29:
+                    c3:60:55:ab:cd:3c:c0:ed:4a:57:e3:75:b1:87:42:
+                    b3:a1:95:17:f5:d8:2d:42:f8:c5:66:5c:f1:e9:6d:
+                    08:56:eb:bb:cd:01:42:0d:44:74:26:65:53:fa:c6:
+                    09:bb:13:24:55:c2:37:87:24:9a:23:1c:ef:fe:d7:
+                    d9:63:03:20:12:0c:77:b2:f1:b8:38:5b:aa:1a:2b:
+                    e7:8d:f3:65:e5:c0:18:bd:6c:f7:0a:d6:73:45:37:
+                    bf:d0:a3:41:e6:69:fe:ee:2b:42:b1:4c:6d:dc:97:
+                    90:ed
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            X509v3 Subject Key Identifier: 
+                5E:4C:F7:4F:DF:21:19:0C:1C:03:C5:A3:63:54:FE:CC:56:5B:49:85
+            X509v3 Authority Key Identifier: 
+                keyid:DA:FD:DC:C8:21:EE:BD:AE:CE:27:E6:04:F2:93:87:7D:51:ED:47:1B
+                DirName:/CN=NGINX_Test
+                serial:48:D5:3A:4F:94:0A:B7:18:A4:18:11:A6:81:75:CB:DF:BD:9C:CA:52
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication
+            X509v3 Key Usage: 
+                Digital Signature, Key Encipherment
+            X509v3 Subject Alternative Name: 
+                IP Address:172.31.4.64, DNS:gn54
+    Signature Algorithm: sha256WithRSAEncryption
+    Signature Value:
+        b5:09:04:68:8d:95:c6:2d:fc:5f:82:25:02:10:1a:cb:4a:7b:
+        13:ac:cb:78:85:af:c4:09:d2:e4:6d:8c:c8:79:7c:44:6a:85:
+        cc:b3:58:46:88:ba:93:d6:59:6f:d6:1e:93:88:5c:22:6d:cb:
+        c3:c0:e4:25:f3:51:90:fc:62:93:69:33:f5:6b:5f:70:9b:3d:
+        d2:d7:a0:9f:ee:8a:5e:cb:8b:76:a3:85:48:1f:98:10:72:d3:
+        eb:a8:f3:ae:bf:72:be:61:d2:8f:d0:1c:26:e2:03:0c:1b:f8:
+        8c:55:71:a0:be:bd:28:93:8e:aa:03:5d:28:76:b0:12:27:2e:
+        ed:0e:1b:8c:e7:1e:66:23:cf:c9:71:23:5e:e4:6d:a9:32:25:
+        c3:25:66:46:f9:68:e3:6e:4a:3f:19:10:cc:53:ea:0f:7c:40:
+        6e:88:65:c3:05:90:ca:8a:47:b0:ba:94:1b:8b:48:6f:5f:8a:
+        e0:76:40:b1:ed:ee:93:80:df:78:0c:9c:4c:00:d5:de:f9:63:
+        78:b3:62:bc:11:08:88:83:0e:db:03:f6:c3:b1:48:b1:65:e5:
+        0a:29:f5:91:a2:76:5e:0f:c0:43:1e:47:89:d2:08:db:e3:06:
+        7e:a0:a9:bd:f8:83:d9:f6:3b:bd:2b:34:f8:97:fd:27:6c:48:
+        f2:35:91:0c
+-----BEGIN CERTIFICATE-----
+MIIDbjCCAlagAwIBAgIQcjUWK9Hlodh0ywhRswyhXzANBgkqhkiG9w0BAQsFADAV
+MRMwEQYDVQQDDApOR0lOWF9UZXN0MB4XDTI1MDEzMDEwMjMyNVoXDTI3MDUwNTEw
+MjMyNVowFjEUMBIGA1UEAwwLc2VydmVyLWduNTQwggEiMA0GCSqGSIb3DQEBAQUA
+A4IBDwAwggEKAoIBAQCxA0oMOmSIdITmiABn/wOc/Xa/GrpagsgLAGMQJWlpWlXZ
+Ekctim88yvROdUiiHWaQodR1KWI3cfjxn9psOm2eadEzT4WKbq4XAgctv0E+YLNz
+2VykV4nYx2yOB1wx5YV4LctVFBmUrjH5kKam9V8bxpOaWbiOr85TWOHdrUjeKWD4
+MBEkebLd9fUzP9WRA362zH0vKcNgVavNPMDtSlfjdbGHQrOhlRf12C1C+MVmXPHp
+bQhW67vNAUINRHQmZVP6xgm7EyRVwjeHJJojHO/+19ljAyASDHey8bg4W6oaK+eN
+82XlwBi9bPcK1nNFN7/Qo0Hmaf7uK0KxTG3cl5DtAgMBAAGjgbgwgbUwCQYDVR0T
+BAIwADAdBgNVHQ4EFgQUXkz3T98hGQwcA8WjY1T+zFZbSYUwUAYDVR0jBEkwR4AU
+2v3cyCHuva7OJ+YE8pOHfVHtRxuhGaQXMBUxEzARBgNVBAMMCk5HSU5YX1Rlc3SC
+FEjVOk+UCrcYpBgRpoF1y9+9nMpSMBMGA1UdJQQMMAoGCCsGAQUFBwMBMAsGA1Ud
+DwQEAwIFoDAVBgNVHREEDjAMhwSsHwRAggRnbjU0MA0GCSqGSIb3DQEBCwUAA4IB
+AQC1CQRojZXGLfxfgiUCEBrLSnsTrMt4ha/ECdLkbYzIeXxEaoXMs1hGiLqT1llv
+1h6TiFwibcvDwOQl81GQ/GKTaTP1a19wmz3S16Cf7opey4t2o4VIH5gQctPrqPOu
+v3K+YdKP0Bwm4gMMG/iMVXGgvr0ok46qA10odrASJy7tDhuM5x5mI8/JcSNe5G2p
+MiXDJWZG+Wjjbko/GRDMU+oPfEBuiGXDBZDKikewupQbi0hvX4rgdkCx7e6TgN94
+DJxMANXe+WN4s2K8EQiIgw7bA/bDsUixZeUKKfWRonZeD8BDHkeJ0gjb4wZ+oKm9
++IPZ9ju9KzT4l/0nbEjyNZEM
+-----END CERTIFICATE-----
